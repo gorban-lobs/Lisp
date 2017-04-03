@@ -341,13 +341,13 @@
 	(cond ((eq-and-eqref 'FALSE 'TRUE s '2) NIL)
 		  (T (list s))
 	))
-;;нигде пока не используется	
+		
 (defun eq-and-eqref (a b s n)	
 	(cond ((eq n '1) (or (equal (list a) s) (equal (mref b) s)))
 		  ((eq n '2) (or (equal (list (list a)) s) (equal (list (mref b)) s)))
 	))	  
 		  
-;;общая проверка повторов
+;;общая проверка повторов(неверная для кон-ций, используется функция из метода Блейка)
 (defun ch-repeat (s)
 	(ch-rep-kon0 (ch-rep-let s)))
 	
@@ -376,35 +376,127 @@
 	))		
 	
 
-;;далее во всех переменных вида si i-указывает на уровень глубины списка в днф (s0 - сама ДНФ)
+;;далее во всех переменных вида ...i i-указывает на уровень глубины (снизу) списка в днф (s0 - сама атом)
+;;ПАРА - (x) и (! x)
 ;;метод блейка
-(defun blake (s)
-	(blake-1 s))
+(defun blake (s3)
+	(blake-1 s3))
 	
 	;;первый шаг метода
-(defun blake-1 (s)
-	rc-blake-1)	
+(defun blake-1 (s3)
+	 (new-kon s3))	
 		
-		;;доп функции
-			;;отрицание буквы
-(defun reflect-cond (s)
-	(cond ((eq (car s) '!) (cdr s))
-		  (T (cons '! s))
+		;;ДОП ФУНКЦии
+;;_______________________________________________		
+		
+		;;проверка на пару и возврат найденого элемента
+(defun is-pair (la2 lm2)
+	(cond ((equal la2 (reflect-cond lm2)) lm2)
+		  (T NIL)
+	))
+		
+		;;отрицание буквы
+(defun reflect-cond (s1)
+	(cond ((eq (car s1) '!) (cdr s1))
+		  (T (cons '! s1))
+	))	
+	
+;;________________________________________________
+
+		;;подготовка списка сравнения
+(defun new-kon (s3)
+	(beg-new-kon (list (car s3)) (cdr s3)))
+		
+		;;проход по кон-циям
+(defun beg-new-kon (sa3 s3)
+	(cond ((null s3) sa3)
+		  (T (beg-new-kon (cons (car s3) sa3) (make-new-kon sa3 (car s3) (cdr s3))))
+	))
+	
+		;;возвращает список с вставленой новой кон-цией
+(defun make-new-kon (sa3 k2 sl3)
+	(append (comp-w-sa sa3 k2) sl3))		
+		
+	
+
+		;;проход по доп. списку
+(defun comp-w-sa (sa3 k2)
+	(cond ((null (cdr sa3)) (pre-is-rep-in-ka sa3 (pre-merg (car sa3) k2)))
+		  (T (is-nil (append (pre-is-rep-in-ka sa3 (pre-merg (car sa3) k2)) (comp-w-sa (cdr sa3) k2))))
 	))
 
-			;;возврат нужного и остальных
-(defun cur-and-oth ()
-	())	
-
-		;;внутр представление результата blake-1
-(defun rc-blake-1 (s)
-	(cons (new-kon s) s))
-
-(defun new-kon (s1)
-	(cond (null (cdr s))))
-
 	
+			;;проверка, есть ли уже такая кон-ция в доп. списке
+(defun pre-is-rep-in-ka (sa3 s3)
+	(cond ((null (is-rep-in-ka sa3 (car s3))) NIL)
+		  (T s3)
+	))
+			
+(defun is-rep-in-ka (sa3 s2)
+	(cond ((null (cdr sa3)) (eq-two-kon (car sa3) s2))
+		  (T (and (eq-two-kon (car sa3) s2) (is-rep-in-ka (cdr sa3) s2)))
+	))
+		
+			
+				;;равенство длины
+(defun eq-two-kon (sa2 sm2)
+	(cond ((eq (length sa2)(length sm2)) (beg-eq-two-kon sa2 sm2))
+		  (T)
+	))
+		
+				;;удаление одинаковых частей для дальнейшей проверки
+(defun beg-eq-two-kon (sa2 sm2)
+	(cond ((null (cdr sm2)) (find-del (car sm2) sa2))
+		  (T (beg-eq-two-kon (find-del (car sm2) sa2) (cdr sm2)))
+	))
 	
+			;;проверка на nil (nil, если nil; s2 иначе)
+(defun is-nil (s2)
+	(cond ((null s2) s2)
+		  (T (list s2))
+	))
+	
+		;;проверка, нашлось ли что-то
+(defun pre-merg (ka2 km2)
+	(let ((eil1 (is-in-two ka2 km2)))
+		(cond (eil1 (ch-rep-pm (make-merg ka2 km2 eil1)))
+			  (T NIL)
+		)
+	))
+	
+		;;проверка на (! x)(x) и удаление повторов
+(defun ch-rep-pm (s2)
+	(cond ((find-oppos s2) NIL)
+		  (T (list (ch-rep-kon0 s2)))
+	))
+	
+		;;проверка наличия пары для двух списков
+(defun is-in-two (ka2 km2) 
+	(cond ((null (cdr km2)) (is-in-ka ka2 (car km2)))
+		  (T (or (is-in-ka ka2 (car km2)) (is-in-two ka2 (cdr km2))))
+	))
+	
+		;;наличие буквы в кон-ции
+(defun is-in-ka (ka2 lm1)
+	(cond ((null (cdr ka2)) (is-pair (car ka2) lm1))
+		  (T (or (is-pair (car ka2) lm1) (is-in-ka (cdr ka2) lm1)))
+	))
+	
+		;;получение новой кон-ции
+(defun make-merg (ka2 km2 l1)
+	(append (find-del (reflect-cond l1) ka2) (find-del l1 km2)))
+		
+		;;найти и уничтожить
+(defun find-del (l1 k2)
+	(cond ((null (cdr k2)) (eq-find-del l1 (car k2)))
+		  (T (append (eq-find-del l1 (car k2)) (find-del l1 (cdr k2))))
+	))
+	
+		;;проверка на равенство
+(defun eq-find-del (la1 lm1)
+	(cond ((equal la1 lm1) NIL)
+		  (T (list lm1))
+	))
 	
 	
 	
@@ -443,12 +535,17 @@
 					'((a & b)) 
 					'((a & b + a & b)) 
 					'((!((a + ! a) & c))) 
-					'((a & ! (b > ! ! c) + ! (! (r & p & p))))))
+					'((a & ! (b > ! ! c) + ! (! (r & p & p))))
+				))
 		  (cts (append '((FALSE)) 
 					'((TRUE)) 
 					'((TRUE & FALSE)) 
 					'(((a + b) & c & FALSE)) 
-					'((!(a + FALSE)))))
+					'((!(a + FALSE)))
+				))
+		  (bl-tests (append '(((a)(b)(c)))
+						
+				))
 		 )
 		(mapcar f ts)
 	))
