@@ -347,9 +347,9 @@
 		  ((eq n '2) (or (equal (list (list a)) s) (equal (list (mref b)) s)))
 	))	  
 		  
-;;общая проверка повторов(неверная для кон-ций, используется функция из метода Блейка)
+;;общая проверка повторов(используется bl1-ch-rep-kon из метода Блейка)
 (defun ch-repeat (s)
-	(ch-rep-kon0 (ch-rep-let s)))
+	(bl1-ch-rep-kon (ch-rep-let s)))
 	
 	;;проверка повторяющихся кон-ций
 (defun ch-rep-kon0 (s)
@@ -438,7 +438,7 @@
 	))
 		
 			
-				;;равенство длины
+				;;равенство длины !!!!ВАЖНО:(T - неэквивалентны)
 (defun eq-two-kon (sa2 sm2)
 	(cond ((eq (length sa2)(length sm2)) (beg-eq-two-kon sa2 sm2))
 		  (T)
@@ -467,7 +467,8 @@
 	
 			;;проверка на (! x)(x) и удаление повторов
 (defun ch-rep-pm (s2)
-	(cond ((find-oppos s2) NIL)
+	(cond ((null s2) NIL)
+		  ((find-oppos s2) NIL)
 		  (T (list (ch-rep-kon0 s2)))
 	))
 	
@@ -498,9 +499,28 @@
 	(cond ((equal la1 lm1) NIL)
 		  (T (list lm1))
 	))
-	
-	
-	
+
+		;;проверка повторов конъюнкций
+(defun bl1-ch-rep-kon (s3)
+	(bl1-crk-beg (list (car s3)) (cdr s3)))
+		
+			;;проход по осн. списку
+(defun bl1-crk-beg (sa3 sm3)
+	(cond ((null sm3) sa3)
+		  ((null (cdr sm3)) (append (bl1-add (car sm3) sa3) sa3))
+		  (T (bl1-crk-beg (append (bl1-add (car sm3) sa3) sa3) (cdr sm3)))
+	))
+		
+			;;добавление в доп. список, если нет
+(defun bl1-add (s2 s3)
+	(cond ((not (bl1-kon-in s2 s3)) NIL)
+		  (T (list s2))
+	))
+			;;проход по доп. списку с возвратом наличия проверяемой кон-ции
+(defun bl1-kon-in (s2 s3)
+	(cond ((null (cdr s3)) (eq-two-kon (car s3) s2))
+		  (T (and (eq-two-kon (car s3) s2) (bl1-kon-in s2 (cdr s3))))
+	))
 	
 
 
@@ -554,6 +574,8 @@
 							'(( ((b)) ((c)(! a)(! b)) ((a)(b)) ((d)(! c)) ))							
 				))
 		  (isrepik (append '(( ((c)(b)) ((! b)(! a)) ((a)(b)) )) '( ((c)(! a)) ) 
+				))
+		  (bl1-rc-ts (append '(())
 				))
 		 )
 		(mapcar f bl-tests)
