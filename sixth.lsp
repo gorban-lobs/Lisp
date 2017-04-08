@@ -380,7 +380,7 @@
 ;;ПАРА - (x) и (! x)
 ;;метод блейка
 (defun blake (s3)
-	(blake-1 s3))
+	(print(blake-1 s3)))
 	
 	;;первый шаг метода
 (defun blake-1 (s3)
@@ -415,20 +415,20 @@
 	
 		;;возвращает список с вставленой новой кон-цией
 (defun make-new-kon (sa3 k2 sl3)
-	(append (comp-w-sa sa3 k2) sl3))		
+	(append (is-nil (comp-w-sa sa3 sa3 k2)) sl3))
 		
 	
 
 		;;проход по доп. списку
-(defun comp-w-sa (sa3 k2)
-	(cond ((null (cdr sa3)) (pre-is-rep-in-ka sa3 (pre-merg (car sa3) k2)))
-		  (T (is-nil (append (pre-is-rep-in-ka sa3 (pre-merg (car sa3) k2)) (comp-w-sa (cdr sa3) k2))))
+(defun comp-w-sa (sa3 sw3 k2)
+	(cond ((null (cdr sw3)) (pre-is-rep-in-ka sa3 (pre-merg (car sw3) k2)))
+		  (T (append (pre-is-rep-in-ka sa3 (pre-merg (car sw3) k2)) (comp-w-sa sa3 (cdr sw3) k2)))
 	))
 
 	
 			;;проверка, есть ли уже такая кон-ция в доп. списке
 (defun pre-is-rep-in-ka (sa3 s3)
-	(cond ((null (is-rep-in-ka sa3 (car s3))) NIL)
+	(cond ((not (is-rep-in-ka sa3 (car s3))) NIL)
 		  (T s3)
 	))
 			
@@ -450,10 +450,11 @@
 		  (T (beg-eq-two-kon (find-del (car sm2) sa2) (cdr sm2)))
 	))
 	
-			;;проверка на nil (nil, если nil; s2 иначе)
+			;;проверка на nil и одиночную кон-цию
 (defun is-nil (s2)
 	(cond ((null s2) s2)
-		  (T (list s2))
+		  ((null (cdr s2)) s2);;раньше было (list s2)
+		  (T s2)
 	))
 	
 		;;проверка, нашлось ли что-то
@@ -464,13 +465,13 @@
 		)
 	))
 	
-		;;проверка на (! x)(x) и удаление повторов
+			;;проверка на (! x)(x) и удаление повторов
 (defun ch-rep-pm (s2)
 	(cond ((find-oppos s2) NIL)
 		  (T (list (ch-rep-kon0 s2)))
 	))
 	
-		;;проверка наличия пары для двух списков
+			;;проверка наличия пары для двух списков
 (defun is-in-two (ka2 km2) 
 	(cond ((null (cdr km2)) (is-in-ka ka2 (car km2)))
 		  (T (or (is-in-ka ka2 (car km2)) (is-in-two ka2 (cdr km2))))
@@ -543,9 +544,17 @@
 					'(((a + b) & c & FALSE)) 
 					'((!(a + FALSE)))
 				))
-		  (bl-tests (append '(((a)(b)(c)))
-						
+		  (bl-tests (append '((((a)(b)(c))))
+							'((((a)) ((! a))))
+							'((((! a))((! a))((! a))))
+							'((((FALSE))))
+							'(( ((! a)(b)) ((a)) ))
+							'(( ((b)) ((c)(! a)(! b)) ((a)(b)) ))
+							'(( ((! b)(! a)) ((a)(b)) ((c)(b)) ))
+							'(( ((b)) ((c)(! a)(! b)) ((a)(b)) ((d)(! c)) ))							
+				))
+		  (isrepik (append '(( ((c)(b)) ((! b)(! a)) ((a)(b)) )) '( ((c)(! a)) ) 
 				))
 		 )
-		(mapcar f ts)
+		(mapcar f bl-tests)
 	))
