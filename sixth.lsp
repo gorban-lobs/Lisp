@@ -380,7 +380,7 @@
 ;;ПАРА - (x) и (! x)
 ;;метод блейка
 (defun blake (s3)
-	(print(blake-1 s3)))
+	(blake-2 (blake-1 s3)))
 	
 	;;первый шаг метода
 (defun blake-1 (s3)
@@ -415,7 +415,7 @@
 	
 		;;возвращает список с вставленой новой кон-цией
 (defun make-new-kon (sa3 k2 sl3)
-	(append (is-nil (comp-w-sa sa3 sa3 k2)) sl3))
+	(append (comp-w-sa sa3 sa3 k2) sl3))
 		
 	
 
@@ -448,14 +448,7 @@
 (defun beg-eq-two-kon (sa2 sm2)
 	(cond ((null (cdr sm2)) (find-del (car sm2) sa2))
 		  (T (beg-eq-two-kon (find-del (car sm2) sa2) (cdr sm2)))
-	))
-	
-			;;проверка на nil и одиночную кон-цию
-(defun is-nil (s2)
-	(cond ((null s2) s2)
-		  ((null (cdr s2)) s2);;раньше было (list s2)
-		  (T s2)
-	))
+	))	
 	
 		;;проверка, нашлось ли что-то
 (defun pre-merg (ka2 km2)
@@ -523,6 +516,57 @@
 	))
 	
 
+	;;второй шаг метода
+(defun blake-2 (s3)
+	(bl2-beg s3))
+
+	
+		;;проход по кон-циям
+(defun bl2-beg (s3)
+	(cond ((null (cdr s3)) s3)
+		  (T (append (is-nil (bl2-thr-sa-2 (car s3) (cdr s3))) (bl2-beg (bl2-thr-sa-1 (car s3) (cdr s3)))))
+	))
+				
+				;;проверка на NIL
+(defun is-nil (s)
+	(cond ((null s) NIL)
+		  (T (list s))
+	))
+				
+		;;проход по оставшемуся списку для преобр. списка
+(defun bl2-thr-sa-1 (s2 s3)
+	(let ((fp-21 (find-part (car s3) s2)))
+		(cond ((null (cdr s3)) fp-21)
+			  (T (append fp-21 (bl2-thr-sa-1 s2 (cdr s3))))
+		)
+	))
+	
+		;;проход по оставшемуся списку для проверочного элемента
+(defun bl2-thr-sa-2 (s2 s3)
+	(let ((fp-12 (find-part s2 (car s3))))
+		(cond ((null (cdr s3)) (car fp-12))
+			  (T (bl2-thr-sa-2 (and s2 (car fp-12)) (cdr s3)))
+		)
+	))
+		
+		;;проверить длины
+(defun find-part (sa2 sm2)
+	(cond ((null sa2) NIL)
+		  ((null sm2) (list sa2))
+		  ((> (length sa2) (length sm2)) (ch-entr sa2 sm2))
+		  (T (list sa2))
+	))
+		
+		;;проверить вхождение
+(defun ch-entr (sa2 sm2)
+	(let ((che-l (car (beg-eq-two-kon sm2 sa2))))
+		(cond ((null che-l) NIL)
+			  (T (list sa2))
+		)
+	))
+	
+	
+	
 
 
 
@@ -530,7 +574,6 @@
 
 ;;начало работы
 (defun start (s)
-	;;потестить
 	(print 
 	(if-nil
 	(print 
@@ -575,8 +618,11 @@
 				))
 		  (isrepik (append '(( ((c)(b)) ((! b)(! a)) ((a)(b)) )) '( ((c)(! a)) ) 
 				))
-		  (bl1-rc-ts (append '(())
+		  (blake-test (append '(( ((! x1)(! x2)) ((x1)(! x2)(x4)) ((x2)(! x3)(x4)) ))
+							  '(( ((x1)(! x2)(x3)) ((! x1)(x2)(! x3)) ((! x2)(! x3)(! x4)) ))
+							  '(( ((x1)) ((! x1)(x2)) ((! x1)(! x2)(x3)) ((! x1)(x2)(x3)(x4)) ))
+							  '(( ((x1)(! x2)(x4)) ((! x1)(! x2)(x3)) ((! x3)(! x4)) ))
 				))
 		 )
-		(mapcar f bl-tests)
+		(mapcar f blake-test)
 	))
